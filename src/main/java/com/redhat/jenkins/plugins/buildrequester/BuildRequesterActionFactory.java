@@ -1,7 +1,7 @@
 package com.redhat.jenkins.plugins.buildrequester;
 
 import hudson.Extension;
-import hudson.model.AbstractBuild;
+import hudson.maven.AbstractMavenBuild;
 import hudson.model.Action;
 import jenkins.model.TransientActionFactory;
 
@@ -16,14 +16,14 @@ import java.util.Collections;
 public class BuildRequesterActionFactory extends TransientActionFactory {
     @Override
     public Class type() {
-        return AbstractBuild.class;
+        return AbstractMavenBuild.class;
     }
 
     @Nonnull
     @Override
     public Collection<? extends Action> createFor(Object build) {
         BuildRequesterAction action = new BuildRequesterAction();
-        action.setBuild((AbstractBuild) build);
+        action.setBuild((AbstractMavenBuild) build);
         return Collections.singleton(action);
     }
 }
