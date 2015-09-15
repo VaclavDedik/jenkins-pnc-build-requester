@@ -7,31 +7,31 @@
 
             <f:form action="buildRequestSubmit" method="POST" name="buildRequest">
                 <f:entry title="Project Name">
-                    <f:textbox name="ProjectName" value="${it.rootPOM.artifactId}" />
+                    <f:textbox name="ProjectName" value="${it.name}" />
                 </f:entry>
                 <f:entry title="GAV">
-                    <f:textbox name="GAV" value="${it.GAV}"/>
+                    <f:textbox name="GAV" value="${it.gav}"/>
                 </f:entry>
                 <f:entry title="SCM URL">
-                    <f:textbox name="SCM" value="${it.scmUrl}"/>
+                    <f:textbox name="SCM"/>
                 </f:entry>
                 <f:entry title="Tag">
                     <f:textbox name="Tag" />
                 </f:entry>
                 <f:entry title="Java Version">
-                    <f:textbox name="JavaVersion"/>
+                    <f:textbox name="JavaVersion" value="${it.javaVersion}"/>
                 </f:entry>
                 <f:entry title="Maven Version">
-                    <f:textbox name="MavenVersion" value="${it.build.mavenVersionUsed}"/>
+                    <f:textbox name="MavenVersion" value="${it.mavenVersion}"/>
                 </f:entry>
                 <f:entry title="Build Command">
-                    <f:textbox name="BuildCommand" value="${it.mavenCommand}"/>
+                    <f:textbox name="BuildCommand" value="${it.buildCommand}"/>
                 </f:entry>
                 <f:entry title="Command Line Parameters">
-                    <f:textbox name="CommandLineParams" value="${it.build.project.mavenOpts}"/>
+                    <f:textbox name="CommandLineParams" value="${it.commandLineParameters}"/>
                 </f:entry>
                 <f:entry title="Build Artifacts Required">
-                    <f:textbox name="BuildArtifactsRequired" value="${it.environment}"/>
+                    <f:textbox name="BuildArtifactsRequired"/>
                 </f:entry>
                 <f:entry title="Community Build">
                     <f:checkbox name="CommunityBuild"/>
