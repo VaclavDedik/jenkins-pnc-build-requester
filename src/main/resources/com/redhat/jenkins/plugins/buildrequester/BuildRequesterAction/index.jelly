@@ -13,7 +13,7 @@
                     <f:textbox name="GAV" value="${it.gav}"/>
                 </f:entry>
                 <f:entry title="SCM URL">
-                    <f:textbox name="SCM"/>
+                    <f:textbox name="SCM" value="${it.scm}"/>
                 </f:entry>
                 <f:entry title="Tag">
                     <f:textbox name="Tag" />

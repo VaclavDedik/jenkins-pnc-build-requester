@@ -25,6 +25,8 @@ public class BuildRequesterAction implements Action {
     private String mavenVersion;
     private String buildCommand;
     private String commandLineParameters;
+    private String scm;
+    private String tag;
 
     public String getName() {
         return name;
@@ -72,6 +74,22 @@ public class BuildRequesterAction implements Action {
 
     public void setCommandLineParameters(String commandLineParameters) {
         this.commandLineParameters = commandLineParameters;
+    }
+
+    public String getScm() {
+        return scm;
+    }
+
+    public void setScm(String scm) {
+        this.scm = scm;
+    }
+
+    public String getTag() {
+        return tag;
+    }
+
+    public void setTag(String tag) {
+        this.tag = tag;
     }
 
     public void setBuild(MavenModuleSetBuild build) {
