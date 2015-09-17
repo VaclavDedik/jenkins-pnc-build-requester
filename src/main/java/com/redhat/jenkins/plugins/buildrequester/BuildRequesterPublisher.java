@@ -1,5 +1,8 @@
 package com.redhat.jenkins.plugins.buildrequester;
 
+import com.redhat.jenkins.plugins.buildrequester.scm.ExtendedGit;
+import com.redhat.jenkins.plugins.buildrequester.scm.ExtendedSCM;
+import com.redhat.jenkins.plugins.buildrequester.scm.ExtendedSubversion;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Proc;
@@ -10,7 +13,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.plugins.git.GitSCM;
-import hudson.plugins.git.UserRemoteConfig;
 import hudson.scm.SCM;
 import hudson.scm.SubversionSCM;
 import hudson.tasks.BuildStepDescriptor;
@@ -21,7 +23,6 @@ import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,6 +56,7 @@ public class BuildRequesterPublisher extends Recorder {
         if (action != null) {
             MavenModuleSetBuild mavenBuild = (MavenModuleSetBuild) build;
             MavenModule rootPom = mavenBuild.getProject().getRootModule();
+            ExtendedSCM scm = extendedScmFactory(mavenBuild.getProject().getScm());
 
             // Set name
             action.setName(rootPom.getArtifactId());
@@ -65,11 +67,7 @@ public class BuildRequesterPublisher extends Recorder {
             action.setGav(gav);
 
             // Set SCM Url
-            SCM scm = mavenBuild.getProject().getScm();
-            action.setScm(getScmUrl(scm));
-            System.out.println("************************");
-            System.out.println(mavenBuild.getEnvironment(listener).get("GIT_URL", "Null"));
-            System.out.println(mavenBuild.getEnvironment(listener).get("SVN_URL", "Null"));
+            action.setScm(scm.getUrl());
 
             // Set java version
             Proc proc = launcher.launch()
@@ -114,26 +112,15 @@ public class BuildRequesterPublisher extends Recorder {
         }
     }
 
-    private String getScmUrl(SCM scm) {
-        String scmUrl = "";
-
-        if (scm instanceof GitSCM) {
-            GitSCM gitSCM = (GitSCM) scm;
-            List<UserRemoteConfig> remoteConfigs = gitSCM.getUserRemoteConfigs();
-            if (!remoteConfigs.isEmpty()) {
-                // Select first repository url
-                scmUrl = remoteConfigs.get(0).getUrl();
-            }
-        } else if (scm instanceof SubversionSCM) {
-            SubversionSCM svmSCM = (SubversionSCM) scm;
-            SubversionSCM.ModuleLocation[] locations = svmSCM.getLocations();
-            if (locations != null && locations.length > 0) {
-                // Select first repository url
-                scmUrl = locations[0].getURL();
-            }
+    private ExtendedSCM extendedScmFactory(SCM scm) {
+        ExtendedSCM extendedSCM = null;
+        if (scm instanceof SubversionSCM) {
+            extendedSCM = new ExtendedSubversion((SubversionSCM) scm);
+        } else if (scm instanceof GitSCM) {
+            extendedSCM = new ExtendedGit((GitSCM) scm);
         }
 
-        return scmUrl;
+        return extendedSCM;
     }
 
 }
