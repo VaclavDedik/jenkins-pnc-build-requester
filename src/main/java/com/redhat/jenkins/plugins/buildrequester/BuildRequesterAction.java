@@ -10,6 +10,8 @@ import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
+import java.util.List;
+
 /**
  * @author vdedik@redhat.com
  */
@@ -26,7 +28,7 @@ public class BuildRequesterAction implements Action {
     private String buildCommand;
     private String commandLineParameters;
     private String scm;
-    private String tag;
+    private List<String> tags;
 
     public String getName() {
         return name;
@@ -84,12 +86,12 @@ public class BuildRequesterAction implements Action {
         this.scm = scm;
     }
 
-    public String getTag() {
-        return tag;
+    public List<String> getTags() {
+        return tags;
     }
 
-    public void setTag(String tag) {
-        this.tag = tag;
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 
     public void setBuild(MavenModuleSetBuild build) {

@@ -24,7 +24,11 @@
                         <f:textbox name="SCM" value="${it.scm}"/>
                     </f:entry>
                     <f:entry title="Tag">
-                        <f:textbox name="Tag" />
+                        <select class="setting-input">
+                            <j:forEach var="tag" items="${it.tags}" varStatus="loop">
+                                <f:option value="${tag}" selected="${loop.index == 0}">${tag}</f:option>
+                            </j:forEach>
+                        </select>
                     </f:entry>
                     <f:entry title="Java Version">
                         <f:textbox name="JavaVersion" value="${it.javaVersion}"/>

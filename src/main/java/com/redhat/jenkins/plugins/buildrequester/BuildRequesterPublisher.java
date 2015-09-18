@@ -1,20 +1,17 @@
 package com.redhat.jenkins.plugins.buildrequester;
 
-import com.redhat.jenkins.plugins.buildrequester.scm.ExtendedGit;
-import com.redhat.jenkins.plugins.buildrequester.scm.ExtendedSCM;
-import com.redhat.jenkins.plugins.buildrequester.scm.ExtendedSubversion;
-import hudson.Extension;
-import hudson.Launcher;
-import hudson.Proc;
+import com.redhat.jenkins.plugins.buildrequester.scm.GitRepository;
+import com.redhat.jenkins.plugins.buildrequester.scm.Repository;
+import hudson.*;
 import hudson.maven.AbstractMavenProject;
 import hudson.maven.MavenModule;
 import hudson.maven.MavenModuleSetBuild;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
-import hudson.scm.SubversionSCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -22,7 +19,9 @@ import hudson.tasks.Recorder;
 import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,7 +55,11 @@ public class BuildRequesterPublisher extends Recorder {
         if (action != null) {
             MavenModuleSetBuild mavenBuild = (MavenModuleSetBuild) build;
             MavenModule rootPom = mavenBuild.getProject().getRootModule();
-            ExtendedSCM scm = extendedScmFactory(mavenBuild.getProject().getScm());
+            File projectDir = new File(build.getWorkspace().getRemote(),
+                    mavenBuild.getProject().getRootPOM(build.getEnvironment(listener))).getParentFile();
+            Repository repo = getRepository(
+                    mavenBuild.getProject().getScm(), listener, build.getEnvironment(listener), projectDir);
+
 
             // Set name
             action.setName(rootPom.getArtifactId());
@@ -67,7 +70,13 @@ public class BuildRequesterPublisher extends Recorder {
             action.setGav(gav);
 
             // Set SCM Url
-            action.setScm(scm.getUrl());
+            action.setScm(repo.getUrl());
+
+            // Set Tags
+            String headCommitId = repo.getHeadCommitId();
+            List<String> tags = repo.getTagsByCommitId(headCommitId);
+            tags.add(headCommitId);
+            action.setTags(tags);
 
             // Set java version
             Proc proc = launcher.launch()
@@ -112,15 +121,13 @@ public class BuildRequesterPublisher extends Recorder {
         }
     }
 
-    private ExtendedSCM extendedScmFactory(SCM scm) {
-        ExtendedSCM extendedSCM = null;
-        if (scm instanceof SubversionSCM) {
-            extendedSCM = new ExtendedSubversion((SubversionSCM) scm);
-        } else if (scm instanceof GitSCM) {
-            extendedSCM = new ExtendedGit((GitSCM) scm);
+    private Repository getRepository(SCM scm, TaskListener taskListener, EnvVars envVars, File repoDir) {
+        Repository repository = null;
+        if (scm instanceof GitSCM) {
+            repository = new GitRepository(taskListener, envVars, repoDir);
         }
 
-        return extendedSCM;
+        return repository;
     }
 
 }
