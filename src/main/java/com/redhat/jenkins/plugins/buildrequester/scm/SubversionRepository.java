@@ -1,47 +1,43 @@
 package com.redhat.jenkins.plugins.buildrequester.scm;
 
-import hudson.scm.SubversionSCM;
+import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNStatus;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author vdedik@redhat.com
  */
 public class SubversionRepository implements Repository {
-    private SubversionSCM subversionSCM;
-    private Integer index;
-    private SubversionSCM.ModuleLocation module;
+    private SVNStatus status;
 
-    public SubversionRepository(SubversionSCM subversionSCM) {
-        this(subversionSCM, 0);
-    }
-
-    public SubversionRepository(SubversionSCM subversionSCM, Integer index) {
-        this.subversionSCM = subversionSCM;
-        this.index = index;
-
-        SubversionSCM.ModuleLocation[] locations = subversionSCM.getLocations();
-        if (locations != null && locations.length >= this.index) {
-            module = locations[this.index];
+    public SubversionRepository(File repoDir) {
+        try {
+            status = SVNClientManager.newInstance().getStatusClient().doStatus(repoDir, false);
+        } catch (SVNException e) {
+            status = null;
         }
     }
 
     @Override
     public String getUrl() {
-        if (module == null) {
+        if (status == null) {
             return "";
         }
 
-        return module.getURL();
+        return status.getURL().toString();
     }
 
     @Override
     public String getHeadCommitId() {
-        return null;
+        return String.valueOf(status.getRevision().getNumber());
     }
 
     @Override
     public List<String> getTagsByCommitId(String commitId) {
-        return null;
+        return new ArrayList<String>();
     }
 }

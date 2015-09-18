@@ -2,6 +2,7 @@ package com.redhat.jenkins.plugins.buildrequester;
 
 import com.redhat.jenkins.plugins.buildrequester.scm.GitRepository;
 import com.redhat.jenkins.plugins.buildrequester.scm.Repository;
+import com.redhat.jenkins.plugins.buildrequester.scm.SubversionRepository;
 import hudson.*;
 import hudson.maven.AbstractMavenProject;
 import hudson.maven.MavenModule;
@@ -12,6 +13,7 @@ import hudson.model.BuildListener;
 import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
+import hudson.scm.SubversionSCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -125,6 +127,8 @@ public class BuildRequesterPublisher extends Recorder {
         Repository repository = null;
         if (scm instanceof GitSCM) {
             repository = new GitRepository(taskListener, envVars, repoDir);
+        } else if (scm instanceof SubversionSCM) {
+            repository = new SubversionRepository(repoDir);
         }
 
         return repository;
