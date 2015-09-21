@@ -36,6 +36,9 @@ public class SubversionRepository implements Repository {
         return String.valueOf(status.getRevision().getNumber());
     }
 
+    /**
+     * There is no easy way to get the list of tags from a subversion repository, so return empty list for now
+     */
     @Override
     public List<String> getTagsByCommitId(String commitId) {
         return new ArrayList<String>();
