@@ -3,13 +3,16 @@ package com.redhat.jenkins.plugins.buildrequester;
 import hudson.maven.MavenModuleSetBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
+import hudson.model.Failure;
 import hudson.security.ACL;
 import hudson.security.Permission;
-import hudson.util.FormApply;
+import hudson.util.HttpResponses;
+import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
+import javax.servlet.ServletException;
 import java.util.List;
 
 /**
@@ -19,6 +22,7 @@ public class BuildRequesterAction implements Action {
     public static final Permission BUILD_REQUEST = AbstractProject.BUILD;
 
     private MavenModuleSetBuild build;
+    private String url;
 
     // Props
     private String name;
@@ -29,6 +33,14 @@ public class BuildRequesterAction implements Action {
     private String commandLineParameters;
     private String scm;
     private List<String> tags;
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
     public String getName() {
         return name;
@@ -109,7 +121,13 @@ public class BuildRequesterAction implements Action {
     @RequirePOST
     public HttpResponse doBuildRequestSubmit(StaplerRequest req) {
         getACL().checkPermission(BUILD_REQUEST);
-        return FormApply.success("..");
+
+        try {
+            System.out.println(req.getSubmittedForm().toString());
+        } catch (ServletException e) {
+            throw new Failure("Exception: " + e.getMessage());
+        }
+        return new HttpRedirect("..");
     }
 
     @Override

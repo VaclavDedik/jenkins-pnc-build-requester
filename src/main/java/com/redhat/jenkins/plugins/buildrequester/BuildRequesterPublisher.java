@@ -18,8 +18,10 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,10 +33,18 @@ import java.util.regex.Pattern;
  * @author vdedik@redhat.com
  */
 public class BuildRequesterPublisher extends Recorder {
+    public static final String DEFAULT_URL = "http://newcastle.example.com";
+
     private BuildRequesterAction action;
+    private String url;
 
     @DataBoundConstructor
-    public BuildRequesterPublisher() {
+    public BuildRequesterPublisher(String url) {
+        this.url = url;
+    }
+
+    public String getUrl() {
+        return url;
     }
 
     @Override
@@ -47,6 +57,7 @@ public class BuildRequesterPublisher extends Recorder {
         if (build instanceof MavenModuleSetBuild) {
             action = new BuildRequesterAction();
             action.setBuild((MavenModuleSetBuild) build);
+            action.setUrl(this.url);
         }
         return true;
     }
@@ -112,6 +123,15 @@ public class BuildRequesterPublisher extends Recorder {
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
+        public String getDefaultUrl() {
+            return BuildRequesterPublisher.DEFAULT_URL;
+        }
+
+        @Override
+        public BuildRequesterPublisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            return req.bindJSON(BuildRequesterPublisher.class, formData);
+        }
+
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return AbstractMavenProject.class.isAssignableFrom(jobType);
@@ -119,7 +139,7 @@ public class BuildRequesterPublisher extends Recorder {
 
         @Override
         public String getDisplayName() {
-            return "Build Requester Publisher";
+            return "Configure Handover to Productization";
         }
     }
 

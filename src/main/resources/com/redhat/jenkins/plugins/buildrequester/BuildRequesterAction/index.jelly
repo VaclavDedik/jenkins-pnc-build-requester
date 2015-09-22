@@ -3,7 +3,10 @@
     <l:layout title="Build Request" norefresh="true">
         <st:include page="sidepanel.jelly" it="${it.build}"/>
         <l:main-panel>
-            <h1>Build Request</h1>
+            <h1 style="margin-bottom: 3px;">Handover to Productization</h1>
+            <div style="margin-bottom: 17px;">
+                <span><b>Handover Url:</b> ${it.url}</span>
+            </div>
 
             <f:form action="buildRequestSubmit" method="POST" name="buildRequest">
                 <f:entry title="Project Name">
@@ -24,7 +27,7 @@
                         <f:textbox name="SCM" value="${it.scm}"/>
                     </f:entry>
                     <f:entry title="Tag">
-                        <select class="setting-input">
+                        <select class="setting-input" name="Tag">
                             <j:forEach var="tag" items="${it.tags}" varStatus="loop">
                                 <f:option value="${tag}" selected="${loop.index == 0}">${tag}</f:option>
                             </j:forEach>
