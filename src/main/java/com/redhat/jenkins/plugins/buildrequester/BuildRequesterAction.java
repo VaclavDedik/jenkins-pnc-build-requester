@@ -7,6 +7,7 @@ import hudson.model.Failure;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import hudson.util.HttpResponses;
+import net.sf.json.JSONObject;
 import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.StaplerRequest;
@@ -123,7 +124,11 @@ public class BuildRequesterAction implements Action {
         getACL().checkPermission(BUILD_REQUEST);
 
         try {
-            System.out.println(req.getSubmittedForm().toString());
+            JSONObject form = req.getSubmittedForm();
+            // Remove keys that are empty (i.e. inputs without name)
+            form.remove("");
+
+            System.out.println(form.toString());
         } catch (ServletException e) {
             throw new Failure("Exception: " + e.getMessage());
         }
