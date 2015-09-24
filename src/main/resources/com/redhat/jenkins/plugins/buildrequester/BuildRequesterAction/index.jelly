@@ -9,43 +9,43 @@
             </div>
 
             <f:form action="buildRequestSubmit" method="POST" name="buildRequest">
-                <f:entry title="Project Name">
+                <f:entry title="Project Name" help="/plugin/build-requester/help/help-ProjectName.html">
                     <f:textbox name="ProjectName" value="${it.name}" />
                 </f:entry>
-                <f:entry title="Community Build">
+                <f:entry title="Community Build" help="/plugin/build-requester/help/help-CommunityBuild.html">
                     <f:checkbox name="CommunityBuild"/>
                 </f:entry>
-                <f:entry title="Patch Build">
+                <f:entry title="Patch Build" help="/plugin/build-requester/help/help-PatchBuild.html">
                     <f:checkbox field="PatchBuild"/>
                 </f:entry>
 
                 <f:advanced align="left">
-                    <f:entry title="GAV">
+                    <f:entry title="GAV" help="/plugin/build-requester/help/help-GAV.html">
                         <f:textbox name="GAV" value="${it.gav}"/>
                     </f:entry>
-                    <f:entry title="SCM URL">
+                    <f:entry title="SCM URL" help="/plugin/build-requester/help/help-SCM.html">
                         <f:textbox name="SCM" value="${it.scm}"/>
                     </f:entry>
-                    <f:entry title="Tag">
+                    <f:entry title="Tag" help="/plugin/build-requester/help/help-Tag.html">
                         <select class="setting-input" name="Tag">
                             <j:forEach var="tag" items="${it.tags}" varStatus="loop">
                                 <f:option value="${tag}" selected="${loop.index == 0}">${tag}</f:option>
                             </j:forEach>
                         </select>
                     </f:entry>
-                    <f:entry title="Java Version">
+                    <f:entry title="Java Version" help="/plugin/build-requester/help/help-JavaVersion.html">
                         <f:textbox name="JavaVersion" value="${it.javaVersion}"/>
                     </f:entry>
-                    <f:entry title="Maven Version">
+                    <f:entry title="Maven Version" help="/plugin/build-requester/help/help-MavenVersion.html">
                         <f:textbox name="MavenVersion" value="${it.mavenVersion}"/>
                     </f:entry>
-                    <f:entry title="Build Command">
+                    <f:entry title="Build Command" help="/plugin/build-requester/help/help-BuildCommand.html">
                         <f:textbox name="BuildCommand" value="${it.buildCommand}"/>
                     </f:entry>
-                    <f:entry title="Command Line Parameters">
+                    <f:entry title="Command Line Parameters" help="/plugin/build-requester/help/help-CommandLineParams.html">
                         <f:textbox name="CommandLineParams" value="${it.commandLineParameters}"/>
                     </f:entry>
-                    <f:entry title="Build Artifacts Required">
+                    <f:entry title="Build Artifacts Required" help="/plugin/build-requester/help/help-BuildArtifactsRequired.html">
                         <f:textbox name="BuildArtifactsRequired"/>
                     </f:entry>
                 </f:advanced>
