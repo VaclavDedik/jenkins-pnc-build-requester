@@ -6,7 +6,6 @@ import hudson.model.Action;
 import hudson.model.Failure;
 import hudson.security.ACL;
 import hudson.security.Permission;
-import hudson.util.HttpResponses;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
@@ -14,6 +13,11 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.servlet.ServletException;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 /**
@@ -125,11 +129,33 @@ public class BuildRequesterAction implements Action {
 
         try {
             JSONObject form = req.getSubmittedForm();
+
             // Remove keys that are empty (i.e. inputs without name)
             form.remove("");
 
-            System.out.println(form.toString());
+            // Send the request
+            URL nclUrl = new URL(this.url);
+            HttpURLConnection conn = (HttpURLConnection) nclUrl.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0");
+            conn.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+            wr.writeBytes(form.toString());
+            wr.flush();
+            wr.close();
+
+            int responseCode = conn.getResponseCode();
+
+            if (responseCode / 100 != 2) {
+                throw new Failure("Failed to send the build request: " + conn.getResponseMessage());
+            }
         } catch (ServletException e) {
+            throw new Failure("Exception: " + e.getMessage());
+        } catch (MalformedURLException e) {
+            throw new Failure("Exception: " + e.getMessage());
+        } catch (IOException e) {
             throw new Failure("Exception: " + e.getMessage());
         }
         return new HttpRedirect("..");
