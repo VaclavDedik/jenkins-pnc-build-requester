@@ -55,7 +55,6 @@ public class BuildRequesterPublisher extends Recorder {
         if (build instanceof MavenModuleSetBuild) {
             action = new BuildRequesterAction();
             action.setBuild((MavenModuleSetBuild) build);
-            action.setUrl(this.url);
         }
         return true;
     }

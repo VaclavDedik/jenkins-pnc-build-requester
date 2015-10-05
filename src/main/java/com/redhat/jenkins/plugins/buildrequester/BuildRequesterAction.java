@@ -23,11 +23,11 @@ import java.util.List;
 /**
  * @author vdedik@redhat.com
  */
+@SuppressWarnings("unchecked")
 public class BuildRequesterAction implements Action {
     public static final Permission BUILD_REQUEST = AbstractProject.BUILD;
 
     private MavenModuleSetBuild build;
-    private String url;
 
     // Props
     private String name;
@@ -40,11 +40,9 @@ public class BuildRequesterAction implements Action {
     private List<String> tags;
 
     public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
+        BuildRequesterPublisher publisher = (BuildRequesterPublisher) build.getProject().getPublishers()
+                .get(build.getDescriptorByName(BuildRequesterPublisher.class.getSimpleName()));
+        return publisher != null ? publisher.getUrl() : null;
     }
 
     public String getName() {
@@ -134,7 +132,7 @@ public class BuildRequesterAction implements Action {
             form.remove("");
 
             // Send the request
-            URL nclUrl = new URL(this.url);
+            URL nclUrl = new URL(getUrl());
             HttpURLConnection conn = (HttpURLConnection) nclUrl.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("User-Agent", "Mozilla/5.0");
