@@ -33,8 +33,6 @@ import java.util.regex.Pattern;
  * @author vdedik@redhat.com
  */
 public class BuildRequesterPublisher extends Recorder {
-    public static final String DEFAULT_URL = "http://newcastle.example.com";
-
     private BuildRequesterAction action;
     private String url;
 
@@ -122,9 +120,21 @@ public class BuildRequesterPublisher extends Recorder {
 
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+        private String defaultUrl;
+
+        public DescriptorImpl() {
+            load();
+        }
 
         public String getDefaultUrl() {
-            return BuildRequesterPublisher.DEFAULT_URL;
+            return defaultUrl;
+        }
+
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject form) throws FormException {
+            defaultUrl = form.getString("defaultUrl");
+            save();
+            return super.configure(req, form);
         }
 
         @Override
