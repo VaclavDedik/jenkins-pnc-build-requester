@@ -3,5 +3,9 @@
         <f:entry title="Default Handover Url" field="defaultUrl">
             <f:textbox/>
         </f:entry>
+
+        <f:entry title="Default Keycloak Settings" field="defaultKeycloakSettings">
+            <f:textarea/>
+        </f:entry>
     </f:section>
 </j:jelly>

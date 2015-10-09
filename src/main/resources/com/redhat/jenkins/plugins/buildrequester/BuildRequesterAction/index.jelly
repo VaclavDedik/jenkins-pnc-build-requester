@@ -2,6 +2,46 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <l:layout title="Build Request" norefresh="true">
         <st:include page="sidepanel.jelly" it="${it.build}"/>
+
+        <l:header>
+            <script type="text/javascript" src="${rootURL}/plugin/build-requester/js/keycloak.min.js"></script>
+
+            <script type="text/javascript">
+                function tagSelectChange(elem) {
+                    var selectedText = elem.options[elem.selectedIndex].innerText;
+                    var otherInput = document.getElementById('tag-other');
+
+                    if (selectedText == "Other:") {
+                        otherInput.style.display = "";
+                    } else {
+                        otherInput.style.display = "none";
+                    }
+                }
+
+                function otherTagValue(elem) {
+                    var select = document.getElementById('tag-other-select');
+                    var otherOption = select.options[select.selectedIndex];
+                    otherOption.value = elem.value;
+                }
+            </script>
+
+            <j:if test="${it.keycloakSettings != null and !it.keycloakSettings.isEmpty()}">
+                <script type="text/javascript">
+                    // Keycloak auth
+                    var keycloak = Keycloak("keycloakSettings");
+                    keycloak.init({ onLoad: 'login-required' })
+                        .success(function (authenticated) {
+                            console.log('Login Successful');
+                            document.getElementById('oauth-input').value = keycloak.token;
+                        }).error(function () {
+                            log.error('Login Failed');
+                            window.location.reload();
+                        }
+                    );
+                </script>
+            </j:if>
+        </l:header>
+
         <l:main-panel>
             <h1 style="margin-bottom: 3px;">Handover to Productization</h1>
 
@@ -9,25 +49,6 @@
                 <div style="margin-bottom: 17px;">
                     <span><b>Handover Url:</b> ${it.url}</span>
                 </div>
-
-                <script type="text/javascript">
-                    function tagSelectChange(elem) {
-                        var selectedText = elem.options[elem.selectedIndex].innerText;
-                        var otherInput = document.getElementById('tag-other');
-
-                        if (selectedText == "Other:") {
-                            otherInput.style.display = "";
-                        } else {
-                            otherInput.style.display = "none";
-                        }
-                    }
-
-                    function otherTagValue(elem) {
-                        var select = document.getElementById('tag-other-select');
-                        var otherOption = select.options[select.selectedIndex];
-                        otherOption.value = elem.value;
-                    }
-                </script>
 
                 <f:form action="buildRequestSubmit" method="POST" name="buildRequest">
                     <f:entry title="Project Name" help="/plugin/build-requester/help/help-ProjectName.html">
@@ -73,6 +94,8 @@
                     <!-- workaround to leave some space for extra field created by javascript -->
                     <f:entry/>
 
+                    <!-- oauth token -->
+                    <input name="oauth" id="oauth-input" type="hidden"/>
                     <f:bottomButtonBar>
                         <f:submit value="Send Build Request" onsubmit="sadfasdf"/>
                     </f:bottomButtonBar>

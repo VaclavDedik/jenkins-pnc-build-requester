@@ -35,14 +35,20 @@ import java.util.regex.Pattern;
 public class BuildRequesterPublisher extends Recorder {
     private BuildRequesterAction action;
     private String url;
+    private String keycloakSettings;
 
     @DataBoundConstructor
-    public BuildRequesterPublisher(String url) {
+    public BuildRequesterPublisher(String url, String keycloakSettings) {
         this.url = url;
+        this.keycloakSettings = keycloakSettings;
     }
 
     public String getUrl() {
         return url;
+    }
+
+    public String getKeycloakSettings() {
+        return keycloakSettings;
     }
 
     @Override
@@ -120,18 +126,34 @@ public class BuildRequesterPublisher extends Recorder {
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         private String defaultUrl;
+        private String defaultKeycloakSettings;
 
         public DescriptorImpl() {
             load();
+            if (defaultKeycloakSettings == null) {
+                defaultKeycloakSettings = getKeycloakSettingsTemplate();
+                save();
+            }
         }
 
         public String getDefaultUrl() {
             return defaultUrl;
         }
 
+        public String getDefaultKeycloakSettings() {
+            return defaultKeycloakSettings;
+        }
+
+        public String getKeycloakSettingsTemplate() {
+            return "{\n  \"realm\": \"\",\n  \"realm-public-key\": \"\",\n  \"auth-server-url\": \"\",\n  "
+                    + "\"ssl-required\": \"\",\n  \"resource\": \"\",\n  \"credentials\": {\n    "
+                    + "\"secret\": \"\"\n  }\n}\n";
+        }
+
         @Override
         public boolean configure(StaplerRequest req, JSONObject form) throws FormException {
             defaultUrl = form.getString("defaultUrl");
+            defaultKeycloakSettings = form.getString("defaultKeycloakSettings");
             save();
             return super.configure(req, form);
         }

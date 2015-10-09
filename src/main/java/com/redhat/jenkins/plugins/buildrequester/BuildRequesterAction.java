@@ -7,9 +7,7 @@ import hudson.model.Failure;
 import hudson.security.ACL;
 import hudson.security.Permission;
 import net.sf.json.JSONObject;
-import org.kohsuke.stapler.HttpRedirect;
-import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.servlet.ServletException;
@@ -39,10 +37,90 @@ public class BuildRequesterAction implements Action {
     private String scm;
     private List<String> tags;
 
-    public String getUrl() {
+    @RequirePOST
+    public HttpResponse doBuildRequestSubmit(StaplerRequest req) {
+        getACL().checkPermission(BUILD_REQUEST);
+
+        try {
+            JSONObject form = req.getSubmittedForm();
+
+            // Remove keys that are empty (i.e. inputs without name)
+            form.remove("");
+            // Remove oauth as that is sent as http header
+            form.remove("oauth");
+
+            // Send the request
+            URL nclUrl = new URL(getUrl());
+            HttpURLConnection conn = (HttpURLConnection) nclUrl.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Authentication", "Bearer " + form.getString("oauth"));
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0");
+            conn.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+            wr.writeBytes(form.toString());
+            wr.flush();
+            wr.close();
+
+            int responseCode = conn.getResponseCode();
+
+            if (responseCode / 100 != 2) {
+                throw new Failure("Failed to send the build request: " + conn.getResponseMessage());
+            }
+        } catch (ServletException e) {
+            throw new Failure("Exception: " + e.getMessage());
+        } catch (MalformedURLException e) {
+            throw new Failure("Exception: " + e.getMessage());
+        } catch (IOException e) {
+            throw new Failure("Exception: " + e.getMessage());
+        }
+        return new HttpRedirect("..");
+    }
+
+    public HttpResponse doKeycloakSettings(StaplerRequest req) {
+        return new HttpResponse() {
+            @Override
+            public void generateResponse(StaplerRequest req, StaplerResponse rsp, Object node) throws IOException, ServletException {
+                rsp.setContentType("application/json");
+                rsp.setStatus(200);
+                rsp.getWriter().write(getKeycloakSettings());
+                rsp.getWriter().flush();
+                rsp.getWriter().close();
+            }
+        };
+    }
+
+
+    @Override
+    public String getIconFileName() {
+        return "/images/24x24/redo.png";
+    }
+
+    @Override
+    public String getDisplayName() {
+        return "Handover to Prod";
+    }
+
+    @Override
+    public String getUrlName() {
+        return "handover";
+    }
+
+    public BuildRequesterPublisher getPublisher() {
         BuildRequesterPublisher publisher = (BuildRequesterPublisher) build.getProject().getPublishers()
                 .get(build.getDescriptorByName(BuildRequesterPublisher.class.getSimpleName()));
+        return publisher;
+    }
+
+    public String getUrl() {
+        BuildRequesterPublisher publisher = this.getPublisher();
         return publisher != null ? publisher.getUrl() : null;
+    }
+
+    public String getKeycloakSettings() {
+        BuildRequesterPublisher publisher = this.getPublisher();
+        return publisher != null ? publisher.getKeycloakSettings() : null;
     }
 
     public String getName() {
@@ -119,58 +197,5 @@ public class BuildRequesterAction implements Action {
 
     public ACL getACL() {
         return this.build.getACL();
-    }
-
-    @RequirePOST
-    public HttpResponse doBuildRequestSubmit(StaplerRequest req) {
-        getACL().checkPermission(BUILD_REQUEST);
-
-        try {
-            JSONObject form = req.getSubmittedForm();
-
-            // Remove keys that are empty (i.e. inputs without name)
-            form.remove("");
-
-            // Send the request
-            URL nclUrl = new URL(getUrl());
-            HttpURLConnection conn = (HttpURLConnection) nclUrl.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0");
-            conn.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setDoOutput(true);
-            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
-            wr.writeBytes(form.toString());
-            wr.flush();
-            wr.close();
-
-            int responseCode = conn.getResponseCode();
-
-            if (responseCode / 100 != 2) {
-                throw new Failure("Failed to send the build request: " + conn.getResponseMessage());
-            }
-        } catch (ServletException e) {
-            throw new Failure("Exception: " + e.getMessage());
-        } catch (MalformedURLException e) {
-            throw new Failure("Exception: " + e.getMessage());
-        } catch (IOException e) {
-            throw new Failure("Exception: " + e.getMessage());
-        }
-        return new HttpRedirect("..");
-    }
-
-    @Override
-    public String getIconFileName() {
-        return "/images/24x24/redo.png";
-    }
-
-    @Override
-    public String getDisplayName() {
-        return "Handover to Prod";
-    }
-
-    @Override
-    public String getUrlName() {
-        return "handover";
     }
 }
