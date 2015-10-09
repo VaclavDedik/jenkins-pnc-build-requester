@@ -60,8 +60,8 @@
                     <f:entry title="Patch Build" help="/plugin/build-requester/help/help-PatchBuild.html">
                         <f:checkbox field="PatchBuild"/>
                     </f:entry>
-                    <f:entry title="GAV" help="/plugin/build-requester/help/help-GAV.html">
-                        <f:textbox name="GAV" value="${it.gav}"/>
+                    <f:entry title="Build Config Name" help="/plugin/build-requester/help/help-BuildConfigName.html">
+                        <f:textbox name="BuildConfigName" value="${it.gav}"/>
                     </f:entry>
                     <f:entry title="SCM URL" help="/plugin/build-requester/help/help-SCM.html">
                         <f:textbox name="SCM" value="${it.scm}"/>
