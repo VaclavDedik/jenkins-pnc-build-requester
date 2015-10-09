@@ -14,17 +14,24 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
 import hudson.scm.SubversionSCM;
+import hudson.search.Search;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import hudson.util.FormValidation;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -171,6 +178,52 @@ public class BuildRequesterPublisher extends Recorder {
         @Override
         public String getDisplayName() {
             return "Configure Handover to Productization";
+        }
+
+        public FormValidation doCheckUrl(@QueryParameter String value) {
+            if (value == null || value.isEmpty()) {
+                return FormValidation.error("Url must not be empty.");
+            }
+
+            try {
+                URL u = new URL(value);
+                u.toURI();
+            } catch (Exception e) {
+                return FormValidation.error("Url must be a valid.");
+            }
+
+            return FormValidation.ok();
+        }
+
+        public FormValidation doCheckKeycloakSettings(@QueryParameter String value) {
+            JSONObject keycloakSettings;
+            try {
+                keycloakSettings = JSONObject.fromObject(value);
+            } catch (JSONException e) {
+                return FormValidation.error("Malformed JSON.");
+            }
+
+            if (!keycloakSettings.containsKey("realm")) {
+                return FormValidation.error("Keycloak Settings must contain realm.");
+            }
+
+            if (!keycloakSettings.containsKey("resource")) {
+                return FormValidation.error("Keycloak Settings must contain resource.");
+            }
+
+            if (!keycloakSettings.containsKey("realm-public-key")) {
+                return FormValidation.error("Keycloak Settings must contain realm-public-key.");
+            }
+
+            if (!keycloakSettings.containsKey("auth-server-url")) {
+                return FormValidation.error("Keycloak Settings must contain auth-server-url.");
+            }
+
+            if (!keycloakSettings.containsKey("credentials")) {
+                return FormValidation.error("Keycloak Settings must contain credentials.");
+            }
+
+            return FormValidation.ok();
         }
     }
 

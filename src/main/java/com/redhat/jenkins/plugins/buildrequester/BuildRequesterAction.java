@@ -100,7 +100,6 @@ public class BuildRequesterAction implements Action {
         throw new Failure(req.getParameter("message"));
     }
 
-
     @Override
     public String getIconFileName() {
         return "/images/24x24/redo.png";
