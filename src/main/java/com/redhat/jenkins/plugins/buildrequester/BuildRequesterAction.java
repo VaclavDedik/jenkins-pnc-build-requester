@@ -66,14 +66,19 @@ public class BuildRequesterAction implements Action {
             int responseCode = conn.getResponseCode();
 
             if (responseCode / 100 != 2) {
-                throw new Failure("Failed to send the build request: " + conn.getResponseMessage());
+                Object content = conn.getContent();
+                String stringContent = null;
+                if (content != null) {
+                    stringContent = content.toString();
+                }
+                throw new Failure("Failed to send the build request: " + conn.getResponseMessage() + ", content: " + stringContent);
             }
         } catch (ServletException e) {
-            throw new Failure("Exception: " + e.getMessage());
+            throw new Failure("Error: " + e.getMessage());
         } catch (MalformedURLException e) {
-            throw new Failure("Exception: " + e.getMessage());
+            throw new Failure("Error: " + e.getMessage());
         } catch (IOException e) {
-            throw new Failure("Exception: " + e.getMessage());
+            throw new Failure("Error: " + e.getMessage());
         }
         return new HttpRedirect("..");
     }
@@ -89,6 +94,10 @@ public class BuildRequesterAction implements Action {
                 rsp.getWriter().close();
             }
         };
+    }
+
+    public HttpResponse doFail(StaplerRequest req) {
+        throw new Failure(req.getParameter("message"));
     }
 
 

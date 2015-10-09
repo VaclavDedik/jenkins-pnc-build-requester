@@ -25,21 +25,18 @@
                 }
             </script>
 
-            <j:if test="${it.keycloakSettings != null and !it.keycloakSettings.isEmpty()}">
-                <script type="text/javascript">
-                    // Keycloak auth
-                    var keycloak = Keycloak("keycloakSettings");
-                    keycloak.init({ onLoad: 'login-required' })
-                        .success(function (authenticated) {
-                            console.log('Login Successful');
-                            document.getElementById('oauth-input').value = keycloak.token;
-                        }).error(function () {
-                            log.error('Login Failed');
-                            window.location.reload();
-                        }
-                    );
-                </script>
-            </j:if>
+            <script type="text/javascript">
+                var keycloak = Keycloak("keycloakSettings");
+                keycloak.init({ onLoad: 'login-required' })
+                    .success(function (authenticated) {
+                        console.log('Login Successful');
+                        document.getElementById('oauth-input').value = keycloak.token;
+                        document.getElementById('error-login').remove();
+                    }).error(function () {
+                        log.error('Login Failed');
+                        window.location = "fail?message=Keycloak Login Failed to Initialize";
+                    });
+            </script>
         </l:header>
 
         <l:main-panel>
@@ -48,6 +45,9 @@
             <j:if test="${it.url != null and !it.url.isEmpty()}">
                 <div style="margin-bottom: 17px;">
                     <span><b>Handover Url:</b> ${it.url}</span>
+                </div>
+                <div id="error-login">
+                    <p class="error"><img src="/jenkins/static/6a376fd1/images/none.gif" height="16" width="1"/>Not properly logged in with keycloak, redirecting...</p>
                 </div>
 
                 <f:form action="buildRequestSubmit" method="POST" name="buildRequest">
@@ -97,7 +97,7 @@
                     <!-- oauth token -->
                     <input name="oauth" id="oauth-input" type="hidden"/>
                     <f:bottomButtonBar>
-                        <f:submit value="Send Build Request" onsubmit="sadfasdf"/>
+                        <f:submit value="Send Build Request"/>
                     </f:bottomButtonBar>
                 </f:form>
             </j:if>
