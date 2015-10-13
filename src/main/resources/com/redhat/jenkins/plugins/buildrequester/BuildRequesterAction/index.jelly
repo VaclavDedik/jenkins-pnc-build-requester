@@ -33,7 +33,7 @@
                         document.getElementById('oauth-input').value = keycloak.token;
                         document.getElementById('error-login').remove();
                     }).error(function () {
-                        log.error('Login Failed');
+                        console.log('Login Failed');
                         window.location = "fail?message=Keycloak Login Failed to Initialize";
                     });
             </script>
@@ -47,7 +47,7 @@
                     <span><b>Handover Url:</b> ${it.url}</span>
                 </div>
                 <div id="error-login">
-                    <p class="error"><img src="/jenkins/static/6a376fd1/images/none.gif" height="16" width="1"/>Not properly logged in with keycloak, redirecting...</p>
+                    <p class="error"><img src="${rootURL}/static/6a376fd1/images/none.gif" height="16" width="1"/>Not properly logged in with keycloak, redirecting...</p>
                 </div>
 
                 <f:form action="buildRequestSubmit" method="POST" name="buildRequest">
