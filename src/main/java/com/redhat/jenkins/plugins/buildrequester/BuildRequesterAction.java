@@ -6,6 +6,7 @@ import hudson.model.Action;
 import hudson.model.Failure;
 import hudson.security.ACL;
 import hudson.security.Permission;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -24,6 +26,9 @@ import java.util.List;
 @SuppressWarnings("unchecked")
 public class BuildRequesterAction implements Action {
     public static final Permission BUILD_REQUEST = AbstractProject.BUILD;
+
+    public static final String BUILD_CONFIG_ENDPOINT = "build-configurations";
+    public static final String BUILD_TRIGGER_ENDPOINT = "build-configurations/%s/build";
 
     private MavenModuleSetBuild build;
 
@@ -43,42 +48,40 @@ public class BuildRequesterAction implements Action {
 
         try {
             JSONObject form = req.getSubmittedForm();
+            final String oauthToken = form.getString("oauth");
 
             // Remove keys that are empty (i.e. inputs without name)
             form.remove("");
             // Remove oauth as that is sent as http header
             form.remove("oauth");
 
+            // Ncl url
+            URL nclUrl = Utils.normalize(new URL(getUrl()));
+
+            // Get build configuration id
+            String query = "?q=name==" + form.getString("BuildConfigName");
+            URL buildConfigUrl = new URL(nclUrl, BUILD_CONFIG_ENDPOINT + query);
+            String buildConfigContent = Utils.get(buildConfigUrl, new HashMap<String, String>() {{
+                put("Authentication", "Bearer " + oauthToken);
+                put("Content-Type", "application/json");
+                put("Accept", "application/json");
+            }});
+            JSONObject buildConfigJson = JSONObject.fromObject(buildConfigContent);
+            String buildId = buildConfigJson.getJSONArray("content").getJSONObject(0).getString("id");
+
             // Send the request
-            URL nclUrl = new URL(getUrl());
-            HttpURLConnection conn = (HttpURLConnection) nclUrl.openConnection();
-            conn.setRequestMethod("POST");
-            conn.setRequestProperty("Authentication", "Bearer " + form.getString("oauth"));
-            conn.setRequestProperty("User-Agent", "Mozilla/5.0");
-            conn.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
-            conn.setRequestProperty("Content-Type", "application/json");
-            conn.setDoOutput(true);
-            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
-            wr.writeBytes(form.toString());
-            wr.flush();
-            wr.close();
-
-            int responseCode = conn.getResponseCode();
-
-            if (responseCode / 100 != 2) {
-                Object content = conn.getContent();
-                String stringContent = null;
-                if (content != null) {
-                    stringContent = content.toString();
-                }
-                throw new Failure("Failed to send the build request: " + conn.getResponseMessage() + ", content: " + stringContent);
-            }
+            URL buildRequestUrl = new URL(nclUrl, String.format(BUILD_TRIGGER_ENDPOINT, buildId));
+            Utils.post(buildRequestUrl, form.toString(), new HashMap<String, String>() {{
+                put("Authentication", "Bearer " + oauthToken);
+                put("Content-Type", "application/json");
+                put("Accept", "application/json");
+            }});
         } catch (ServletException e) {
-            throw new Failure("Error: " + e.getMessage());
+            throw new Failure("Error: " + e.getClass() + ": " + e.getMessage());
         } catch (MalformedURLException e) {
-            throw new Failure("Error: " + e.getMessage());
+            throw new Failure("Error: " + e.getClass() + ": " + e.getMessage());
         } catch (IOException e) {
-            throw new Failure("Error: " + e.getMessage());
+            throw new Failure("Error: " + e.getClass() + ": " + e.getMessage());
         }
         return new HttpRedirect("..");
     }
