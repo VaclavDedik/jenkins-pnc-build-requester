@@ -95,8 +95,8 @@ public class BuildRequesterAction implements Action {
                             buildRequestResponse.getContent()).getString("errorMessage");
                     throw new Failure("Build request error: " + errMessage);
                 } catch (JSONException e) {
-                    throw new Failure("Build request error: " + buildConfigResponse.getResponseCode() +
-                            " " + buildConfigResponse.getResponseMessage());
+                    throw new Failure("Build request error: " + buildRequestResponse.getResponseCode() +
+                            " " + buildRequestResponse.getResponseMessage());
                 }
             }
         } catch (ServletException e) {
