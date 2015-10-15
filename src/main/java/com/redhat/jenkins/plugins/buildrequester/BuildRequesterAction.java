@@ -6,15 +6,13 @@ import hudson.model.Action;
 import hudson.model.Failure;
 import hudson.security.ACL;
 import hudson.security.Permission;
-import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.servlet.ServletException;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -58,24 +56,49 @@ public class BuildRequesterAction implements Action {
             // Ncl url
             URL nclUrl = Utils.normalize(new URL(getUrl()));
 
-            // Get build configuration id
+            // Send request for build configuration id
             String query = "?q=name==" + form.getString("BuildConfigName");
             URL buildConfigUrl = new URL(nclUrl, BUILD_CONFIG_ENDPOINT + query);
-            String buildConfigContent = Utils.get(buildConfigUrl, new HashMap<String, String>() {{
+            HttpUtils.Response buildConfigResponse = HttpUtils.get(buildConfigUrl, new HashMap<String, String>() {{
                 put("Authentication", "Bearer " + oauthToken);
                 put("Content-Type", "application/json");
                 put("Accept", "application/json");
             }});
-            JSONObject buildConfigJson = JSONObject.fromObject(buildConfigContent);
+
+            // Handle response
+            if (buildConfigResponse.getResponseCode() == 204) {
+                throw new Failure("Build config '" + form.getString("BuildConfigName") + "' not found.");
+            } else if (buildConfigResponse.getResponseCode() / 100 != 2) {
+                try {
+                    String errMessage = JSONObject.fromObject(
+                            buildConfigResponse.getContent()).getString("errorMessage");
+                    throw new Failure("Build config lookup error: " + errMessage);
+                } catch (JSONException e) {
+                    throw new Failure("Build config lookup error: " + buildConfigResponse.getResponseCode() +
+                            " " + buildConfigResponse.getResponseMessage());
+                }
+            }
+            JSONObject buildConfigJson = JSONObject.fromObject(buildConfigResponse.getContent());
             String buildId = buildConfigJson.getJSONArray("content").getJSONObject(0).getString("id");
 
             // Send the request
             URL buildRequestUrl = new URL(nclUrl, String.format(BUILD_TRIGGER_ENDPOINT, buildId));
-            Utils.post(buildRequestUrl, form.toString(), new HashMap<String, String>() {{
+            HttpUtils.Response buildRequestResponse = HttpUtils.post(buildRequestUrl, form.toString(),
+                    new HashMap<String, String>() {{
                 put("Authentication", "Bearer " + oauthToken);
                 put("Content-Type", "application/json");
                 put("Accept", "application/json");
             }});
+            if (buildRequestResponse.getResponseCode() / 100 != 2) {
+                try {
+                    String errMessage = JSONObject.fromObject(
+                            buildRequestResponse.getContent()).getString("errorMessage");
+                    throw new Failure("Build request error: " + errMessage);
+                } catch (JSONException e) {
+                    throw new Failure("Build request error: " + buildConfigResponse.getResponseCode() +
+                            " " + buildConfigResponse.getResponseMessage());
+                }
+            }
         } catch (ServletException e) {
             throw new Failure("Error: " + e.getClass() + ": " + e.getMessage());
         } catch (MalformedURLException e) {
