@@ -87,43 +87,22 @@ public class BuildRequesterPublisher extends Recorder {
             // Set name
             action.setName(rootPom.getArtifactId());
 
-            // Set GAV
+            // Set name
             String gav = String.format("%s:%s:%s", rootPom.getGroupId(), rootPom.getArtifactId(),
                     rootPom.getVersion());
-            action.setGav(gav);
+            action.setName(gav.replaceAll("[^A-Za-z0-9]", ""));
 
             // Set SCM Url
-            action.setScm(repo.getUrl());
+            action.setScmRepoURL(repo.getUrl());
 
             // Set Tags
             String headCommitId = repo.getHeadCommitId();
             List<String> tags = repo.getTagsByCommitId(headCommitId);
             tags.add(headCommitId);
-            action.setTags(tags);
+            action.setScmRevisions(tags);
 
-            // Set java version
-            Proc proc = launcher.launch()
-                    .cmds("$JAVA_HOME/bin/java", "-version")
-                    .envs(mavenBuild.getEnvironment(listener))
-                    .readStdout()
-                    .start();
-            if (proc.join() == 0) {
-                String javaVersionOut = IOUtils.toString(proc.getStdout(), build.getCharset());
-                Pattern pattern = Pattern.compile("java version \"(.*)\"");
-                Matcher matcher = pattern.matcher(javaVersionOut);
-                if (matcher.find()) {
-                    action.setJavaVersion(matcher.group(1));
-                }
-            }
-
-            // Set Maven Version
-            action.setMavenVersion(mavenBuild.getMavenVersionUsed());
-
-            // Set Maven Command
-            action.setBuildCommand("mvn " + mavenBuild.getProject().getGoals());
-
-            // Set Command Line Params (MAVEN_OPTS)
-            action.setCommandLineParameters(mavenBuild.getProject().getMavenOpts());
+            // Set Build Script
+            action.setBuildScript("mvn " + mavenBuild.getProject().getGoals());
 
             mavenBuild.addAction(action);
         }

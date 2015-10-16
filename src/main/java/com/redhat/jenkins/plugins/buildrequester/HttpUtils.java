@@ -1,7 +1,5 @@
 package com.redhat.jenkins.plugins.buildrequester;
 
-import hudson.model.Failure;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,24 +14,14 @@ public class HttpUtils {
 
     public static Response get(URL url, Map<String, String> headers) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
         for (String headerName : headers.keySet()) {
             conn.setRequestProperty(headerName, headers.get(headerName));
         }
 
-        String content;
-        try {
-            InputStream responseContent = conn.getInputStream();
-            content = Utils.convertStreamToString(responseContent);
-            responseContent.close();
-        } catch (IOException e) {
-            InputStream responseErrorContent = conn.getErrorStream();
-            content = Utils.convertStreamToString(responseErrorContent);
-            responseErrorContent.close();
-        }
-
         Response response = new Response();
         response.setResponseCode(conn.getResponseCode());
-        response.setContent(content);
+        response.setContent(readContent(conn));
         response.setResponseMessage(conn.getResponseMessage());
 
         return response;
@@ -41,6 +29,7 @@ public class HttpUtils {
 
     public static Response post(URL url, String data, Map<String, String> headers) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
         for (String headerName : headers.keySet()) {
             conn.setRequestProperty(headerName, headers.get(headerName));
         }
@@ -52,20 +41,9 @@ public class HttpUtils {
         wr.flush();
         wr.close();
 
-        String content;
-        try {
-            InputStream responseContent = conn.getInputStream();
-            content = Utils.convertStreamToString(responseContent);
-            responseContent.close();
-        } catch (IOException e) {
-            InputStream responseErrorContent = conn.getErrorStream();
-            content = Utils.convertStreamToString(responseErrorContent);
-            responseErrorContent.close();
-        }
-
         Response response = new Response();
         response.setResponseCode(conn.getResponseCode());
-        response.setContent(content);
+        response.setContent(readContent(conn));
         response.setResponseMessage(conn.getResponseMessage());
 
         return response;
@@ -99,5 +77,24 @@ public class HttpUtils {
         public void setResponseMessage(String responseMessage) {
             this.responseMessage = responseMessage;
         }
+    }
+
+    private static String readContent(HttpURLConnection conn) throws IOException{
+        String content = "";
+        try {
+            InputStream responseContent = conn.getInputStream();
+            if (responseContent != null) {
+                content = Utils.convertStreamToString(responseContent);
+                responseContent.close();
+            }
+        } catch (IOException e) {
+            InputStream responseErrorContent = conn.getErrorStream();
+            if (responseErrorContent != null) {
+                content = Utils.convertStreamToString(responseErrorContent);
+                responseErrorContent.close();
+            }
+        }
+
+        return content;
     }
 }

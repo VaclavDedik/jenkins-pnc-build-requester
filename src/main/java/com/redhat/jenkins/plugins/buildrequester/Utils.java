@@ -18,6 +18,9 @@ public class Utils {
     }
 
     public static String convertStreamToString(InputStream is) {
+        if (is == null) {
+            return "";
+        }
         Scanner s = new Scanner(is).useDelimiter("\\A");
         return s.hasNext() ? s.next() : "";
     }

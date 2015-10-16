@@ -7,9 +7,9 @@
             <script type="text/javascript" src="${rootURL}/plugin/build-requester/js/keycloak.min.js"></script>
 
             <script type="text/javascript">
-                function tagSelectChange(elem) {
+                function scmRevisionSelectChange(elem) {
                     var selectedText = elem.options[elem.selectedIndex].innerText;
-                    var otherInput = document.getElementById('tag-other');
+                    var otherInput = document.getElementById('scmRevision-other');
 
                     if (selectedText == "Other:") {
                         otherInput.style.display = "";
@@ -18,8 +18,8 @@
                     }
                 }
 
-                function otherTagValue(elem) {
-                    var select = document.getElementById('tag-other-select');
+                function otherScmRevisionValue(elem) {
+                    var select = document.getElementById('scmRevision-other-select');
                     var otherOption = select.options[select.selectedIndex];
                     otherOption.value = elem.value;
                 }
@@ -44,52 +44,31 @@
 
             <j:if test="${it.url != null and !it.url.isEmpty()}">
                 <div style="margin-bottom: 17px;">
-                    <span><b>Handover Url:</b> ${it.url}</span>
+                    <span><b>Project Newcastle REST Url:</b> ${it.url}</span>
                 </div>
                 <div id="error-login">
                     <p class="error"><img src="${rootURL}/static/6a376fd1/images/none.gif" height="16" width="1"/>Not properly logged in with keycloak, redirecting...</p>
                 </div>
 
                 <f:form action="buildRequestSubmit" method="POST" name="buildRequest">
-                    <f:entry title="Project Name" help="/plugin/build-requester/help/help-ProjectName.html">
-                        <f:textbox name="ProjectName" value="${it.name}" />
+                    <f:entry title="Build Configuration Name" help="/plugin/build-requester/help/help-name.html">
+                        <f:textbox name="name" value="${it.name}" />
                     </f:entry>
-                    <f:entry title="Community Build" help="/plugin/build-requester/help/help-CommunityBuild.html">
-                        <f:checkbox name="CommunityBuild"/>
+                    <f:entry title="SCM URL" help="/plugin/build-requester/help/help-scmRepoURL.html">
+                        <f:textbox name="scmRepoURL" value="${it.scmRepoURL}"/>
                     </f:entry>
-                    <f:entry title="Patch Build" help="/plugin/build-requester/help/help-PatchBuild.html">
-                        <f:checkbox field="PatchBuild"/>
-                    </f:entry>
-                    <f:entry title="Build Config Name" help="/plugin/build-requester/help/help-BuildConfigName.html">
-                        <f:textbox name="BuildConfigName" value="${it.gav}"/>
-                    </f:entry>
-                    <f:entry title="SCM URL" help="/plugin/build-requester/help/help-SCM.html">
-                        <f:textbox name="SCM" value="${it.scm}"/>
-                    </f:entry>
-                    <f:entry title="Tag" help="/plugin/build-requester/help/help-Tag.html">
-                        <select id="tag-other-select" class="setting-input" name="Tag" onchange="tagSelectChange(this)">
-                            <j:forEach var="tag" items="${it.tags}" varStatus="loop">
-                                <f:option value="${tag}" selected="${loop.index == 0}">${tag}</f:option>
+                    <f:entry title="SCM Revision" help="/plugin/build-requester/help/help-scmRevision.html">
+                        <select id="scmRevision-other-select" class="setting-input" name="scmRevision" onchange="scmRevisionSelectChange(this)">
+                            <j:forEach var="scmRevision" items="${it.scmRevisions}" varStatus="loop">
+                                <f:option value="${scmRevision}" selected="${loop.index == 0}">${scmRevision}</f:option>
                             </j:forEach>
                             <f:option value="">Other:</f:option>
                         </select>
-                        <input id="tag-other" class="setting-input" type="text" value="" onchange="otherTagValue(this)"
+                        <input id="scmRevision-other" class="setting-input" type="text" value="" onchange="otherScmRevisionValue(this)"
                                style="display: none; margin-top: 10px;"/>
                     </f:entry>
-                    <f:entry title="Java Version" help="/plugin/build-requester/help/help-JavaVersion.html">
-                        <f:textbox name="JavaVersion" value="${it.javaVersion}"/>
-                    </f:entry>
-                    <f:entry title="Maven Version" help="/plugin/build-requester/help/help-MavenVersion.html">
-                        <f:textbox name="MavenVersion" value="${it.mavenVersion}"/>
-                    </f:entry>
-                    <f:entry title="Build Command" help="/plugin/build-requester/help/help-BuildCommand.html">
-                        <f:textbox name="BuildCommand" value="${it.buildCommand}"/>
-                    </f:entry>
-                    <f:entry title="Command Line Parameters" help="/plugin/build-requester/help/help-CommandLineParams.html">
-                        <f:textbox name="CommandLineParams" value="${it.commandLineParameters}"/>
-                    </f:entry>
-                    <f:entry title="Build Artifacts Required" help="/plugin/build-requester/help/help-BuildArtifactsRequired.html">
-                        <f:textbox name="BuildArtifactsRequired"/>
+                    <f:entry title="Build Script" help="/plugin/build-requester/help/help-buildScript.html">
+                        <f:textbox name="buildScript" value="${it.buildScript}"/>
                     </f:entry>
                     <!-- workaround to leave some space for extra field created by javascript -->
                     <f:entry/>

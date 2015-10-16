@@ -17,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author vdedik@redhat.com
@@ -32,13 +33,9 @@ public class BuildRequesterAction implements Action {
 
     // Props
     private String name;
-    private String gav;
-    private String javaVersion;
-    private String mavenVersion;
-    private String buildCommand;
-    private String commandLineParameters;
-    private String scm;
-    private List<String> tags;
+    private String buildScript;
+    private String scmRepoURL;
+    private List<String> scmRevisions;
 
     @RequirePOST
     public HttpResponse doBuildRequestSubmit(StaplerRequest req) {
@@ -53,51 +50,52 @@ public class BuildRequesterAction implements Action {
             // Remove oauth as that is sent as http header
             form.remove("oauth");
 
+            // Add project id and environment id
+            form.put("projectId", 1);
+            form.put("environmentId", 1);
+
             // Ncl url
             URL nclUrl = Utils.normalize(new URL(getUrl()));
 
-            // Send request for build configuration id
-            String query = "?q=name==" + form.getString("BuildConfigName");
-            URL buildConfigUrl = new URL(nclUrl, BUILD_CONFIG_ENDPOINT + query);
-            HttpUtils.Response buildConfigResponse = HttpUtils.get(buildConfigUrl, new HashMap<String, String>() {{
+            // Default headers
+            Map<String, String> defaultHeaders = new HashMap<String, String>() {{
                 put("Authentication", "Bearer " + oauthToken);
                 put("Content-Type", "application/json");
                 put("Accept", "application/json");
-            }});
+            }};
 
-            // Handle response
-            if (buildConfigResponse.getResponseCode() == 204) {
-                throw new Failure("Build config '" + form.getString("BuildConfigName") + "' not found.");
-            } else if (buildConfigResponse.getResponseCode() / 100 != 2) {
-                try {
-                    String errMessage = JSONObject.fromObject(
-                            buildConfigResponse.getContent()).getString("errorMessage");
-                    throw new Failure("Build config lookup error: " + errMessage);
-                } catch (JSONException e) {
-                    throw new Failure("Build config lookup error: " + buildConfigResponse.getResponseCode() +
-                            " " + buildConfigResponse.getResponseMessage());
-                }
+            // Send request for build configuration id
+            String query = "?q=name==" + form.getString("name");
+            URL buildConfigUrl = new URL(nclUrl, BUILD_CONFIG_ENDPOINT + query);
+            HttpUtils.Response buildConfigResponse = HttpUtils.get(buildConfigUrl, defaultHeaders);
+
+            // Handle errors
+            if (buildConfigResponse.getResponseCode() / 100 != 2) {
+                handleHttpError("Build config lookup error", buildConfigResponse);
             }
-            JSONObject buildConfigJson = JSONObject.fromObject(buildConfigResponse.getContent());
-            String buildId = buildConfigJson.getJSONArray("content").getJSONObject(0).getString("id");
+
+            // Handle response and get build id
+            int buildId;
+            if (buildConfigResponse.getResponseCode() == 204) {
+                URL newBuildConfig = new URL(nclUrl, BUILD_CONFIG_ENDPOINT);
+                HttpUtils.Response newBuildConfigResponse = HttpUtils.post(
+                        newBuildConfig, form.toString(), defaultHeaders);
+                if (newBuildConfigResponse.getResponseCode() / 100 != 2) {
+                    handleHttpError("Build config creation error", newBuildConfigResponse);
+                }
+
+                JSONObject newbuildConfigJson = JSONObject.fromObject(newBuildConfigResponse.getContent());
+                buildId = newbuildConfigJson.getJSONObject("content").getInt("id");
+            } else {
+                JSONObject buildConfigJson = JSONObject.fromObject(buildConfigResponse.getContent());
+                buildId = buildConfigJson.getJSONArray("content").getJSONObject(0).getInt("id");
+            }
 
             // Send the request
             URL buildRequestUrl = new URL(nclUrl, String.format(BUILD_TRIGGER_ENDPOINT, buildId));
-            HttpUtils.Response buildRequestResponse = HttpUtils.post(buildRequestUrl, form.toString(),
-                    new HashMap<String, String>() {{
-                put("Authentication", "Bearer " + oauthToken);
-                put("Content-Type", "application/json");
-                put("Accept", "application/json");
-            }});
+            HttpUtils.Response buildRequestResponse = HttpUtils.post(buildRequestUrl, null, defaultHeaders);
             if (buildRequestResponse.getResponseCode() / 100 != 2) {
-                try {
-                    String errMessage = JSONObject.fromObject(
-                            buildRequestResponse.getContent()).getString("errorMessage");
-                    throw new Failure("Build request error: " + errMessage);
-                } catch (JSONException e) {
-                    throw new Failure("Build request error: " + buildRequestResponse.getResponseCode() +
-                            " " + buildRequestResponse.getResponseMessage());
-                }
+                handleHttpError("Build request error", buildRequestResponse);
             }
         } catch (ServletException e) {
             throw new Failure("Error: " + e.getClass() + ": " + e.getMessage());
@@ -165,60 +163,28 @@ public class BuildRequesterAction implements Action {
         this.name = name;
     }
 
-    public void setJavaVersion(String javaVersion) {
-        this.javaVersion = javaVersion;
+    public String getBuildScript() {
+        return buildScript;
     }
 
-    public String getJavaVersion() {
-        return this.javaVersion;
+    public void setBuildScript(String buildScript) {
+        this.buildScript = buildScript;
     }
 
-    public String getGav() {
-        return gav;
+    public String getScmRepoURL() {
+        return scmRepoURL;
     }
 
-    public void setGav(String gav) {
-        this.gav = gav;
+    public void setScmRepoURL(String scmRepoURL) {
+        this.scmRepoURL = scmRepoURL;
     }
 
-    public String getMavenVersion() {
-        return mavenVersion;
+    public List<String> getScmRevisions() {
+        return scmRevisions;
     }
 
-    public void setMavenVersion(String mavenVersion) {
-        this.mavenVersion = mavenVersion;
-    }
-
-    public String getBuildCommand() {
-        return buildCommand;
-    }
-
-    public void setBuildCommand(String buildCommand) {
-        this.buildCommand = buildCommand;
-    }
-
-    public String getCommandLineParameters() {
-        return commandLineParameters;
-    }
-
-    public void setCommandLineParameters(String commandLineParameters) {
-        this.commandLineParameters = commandLineParameters;
-    }
-
-    public String getScm() {
-        return scm;
-    }
-
-    public void setScm(String scm) {
-        this.scm = scm;
-    }
-
-    public List<String> getTags() {
-        return tags;
-    }
-
-    public void setTags(List<String> tags) {
-        this.tags = tags;
+    public void setScmRevisions(List<String> scmRevisions) {
+        this.scmRevisions = scmRevisions;
     }
 
     public void setBuild(MavenModuleSetBuild build) {
@@ -231,5 +197,14 @@ public class BuildRequesterAction implements Action {
 
     public ACL getACL() {
         return this.build.getACL();
+    }
+
+    private void handleHttpError(String title, HttpUtils.Response response) {
+        try {
+            String errMessage = JSONObject.fromObject(response.getContent()).getString("errorMessage");
+            throw new Failure(title + ": " + errMessage);
+        } catch (JSONException e) {
+            throw new Failure(title + ": " + response.getResponseCode() + " " + response.getResponseMessage());
+        }
     }
 }
