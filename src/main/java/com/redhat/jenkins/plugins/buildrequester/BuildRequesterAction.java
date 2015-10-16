@@ -59,7 +59,7 @@ public class BuildRequesterAction implements Action {
 
             // Default headers
             Map<String, String> defaultHeaders = new HashMap<String, String>() {{
-                put("Authentication", "Bearer " + oauthToken);
+                put("Authorization", "Bearer " + oauthToken);
                 put("Content-Type", "application/json");
                 put("Accept", "application/json");
             }};
