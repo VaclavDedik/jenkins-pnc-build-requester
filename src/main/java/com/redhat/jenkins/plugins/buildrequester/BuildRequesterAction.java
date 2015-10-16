@@ -45,14 +45,15 @@ public class BuildRequesterAction implements Action {
             JSONObject form = req.getSubmittedForm();
             final String oauthToken = form.getString("oauth");
 
-            // Remove keys that are empty (i.e. inputs without name)
-            form.remove("");
-            // Remove oauth as that is sent as http header
-            form.remove("oauth");
+            JSONObject data = new JSONObject();
 
-            // Add project id and environment id
-            form.put("projectId", 1);
-            form.put("environmentId", 1);
+            // Build data
+            data.put("name", form.getString("name"));
+            data.put("scmRepoURL", form.getString("scmRepoURL"));
+            data.put("scmRevision", form.getString("scmRevision"));
+            data.put("buildScript", form.getString("buildScript"));
+            data.put("projectId", 1);
+            data.put("environmentId", 1);
 
             // Ncl url
             URL nclUrl = Utils.normalize(new URL(getUrl()));
@@ -65,7 +66,7 @@ public class BuildRequesterAction implements Action {
             }};
 
             // Send request for build configuration id
-            String query = "?q=name==" + form.getString("name");
+            String query = "?q=name==" + data.getString("name");
             URL buildConfigUrl = new URL(nclUrl, BUILD_CONFIG_ENDPOINT + query);
             HttpUtils.Response buildConfigResponse = HttpUtils.get(buildConfigUrl, defaultHeaders);
 
@@ -79,7 +80,7 @@ public class BuildRequesterAction implements Action {
             if (buildConfigResponse.getResponseCode() == 204) {
                 URL newBuildConfig = new URL(nclUrl, BUILD_CONFIG_ENDPOINT);
                 HttpUtils.Response newBuildConfigResponse = HttpUtils.post(
-                        newBuildConfig, form.toString(), defaultHeaders);
+                        newBuildConfig, data.toString(), defaultHeaders);
                 if (newBuildConfigResponse.getResponseCode() / 100 != 2) {
                     handleHttpError("Build config creation error", newBuildConfigResponse);
                 }
