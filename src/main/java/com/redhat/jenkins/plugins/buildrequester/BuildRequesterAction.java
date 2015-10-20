@@ -90,6 +90,13 @@ public class BuildRequesterAction implements Action {
             } else {
                 JSONObject buildConfigJson = JSONObject.fromObject(buildConfigResponse.getContent());
                 buildId = buildConfigJson.getJSONArray("content").getJSONObject(0).getInt("id");
+
+                URL editBuildConfig = new URL(nclUrl, BUILD_CONFIG_ENDPOINT + "/" + buildId + "/");
+                HttpUtils.Response editBuildConfigResponse = HttpUtils.put(
+                        editBuildConfig, data.toString(), defaultHeaders);
+                if (editBuildConfigResponse.getResponseCode() / 100 != 2) {
+                    handleHttpError("Build config update error", editBuildConfigResponse);
+                }
             }
 
             // Send the request

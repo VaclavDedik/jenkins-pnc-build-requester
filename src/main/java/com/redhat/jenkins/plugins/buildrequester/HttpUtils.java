@@ -13,33 +13,34 @@ import java.util.Map;
 public class HttpUtils {
 
     public static Response get(URL url, Map<String, String> headers) throws IOException {
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        for (String headerName : headers.keySet()) {
-            conn.setRequestProperty(headerName, headers.get(headerName));
-        }
-
-        Response response = new Response();
-        response.setResponseCode(conn.getResponseCode());
-        response.setContent(readContent(conn));
-        response.setResponseMessage(conn.getResponseMessage());
-
-        return response;
+        return doRequest(url, null, headers, "GET");
     }
 
     public static Response post(URL url, String data, Map<String, String> headers) throws IOException {
+        return doRequest(url, data, headers, "POST");
+    }
+
+    public static Response put(URL url, String data, Map<String, String> headers) throws IOException {
+        return doRequest(url, data, headers, "PUT");
+    }
+
+    public static Response doRequest(URL url, String data, Map<String, String> headers, String method)
+            throws IOException {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestMethod("POST");
         for (String headerName : headers.keySet()) {
             conn.setRequestProperty(headerName, headers.get(headerName));
         }
-        conn.setDoOutput(true);
-        DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
-        if (data != null) {
-            wr.writeBytes(data);
+        conn.setRequestMethod(method);
+
+        if (!"GET".equals(method)) {
+            conn.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(conn.getOutputStream());
+            if (data != null) {
+                wr.writeBytes(data);
+            }
+            wr.flush();
+            wr.close();
         }
-        wr.flush();
-        wr.close();
 
         Response response = new Response();
         response.setResponseCode(conn.getResponseCode());
@@ -48,6 +49,7 @@ public class HttpUtils {
 
         return response;
     }
+
 
     public static class Response {
         private Integer responseCode;
