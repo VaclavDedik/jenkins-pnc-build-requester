@@ -11,7 +11,7 @@
   </parent>
   <groupId>com.redhat.jenkins.plugins</groupId>
   <artifactId>build-requester</artifactId>
-  <version>0.7</version>
+  <version>0.8-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
   <name>Project Newcastle Build Requester Plugin</name>
@@ -34,7 +34,7 @@
     <connection>scm:git:git://github.com/VaclavDedik/jenkins-pnc-build-requester.git</connection>
     <developerConnection>scm:git:git@github.com:VaclavDedik/jenkins-pnc-build-requester.git</developerConnection>
     <url>https://github.com/VaclavDedik/jenkins-pnc-build-requester</url>
-    <tag>0.7</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <dependencies>
