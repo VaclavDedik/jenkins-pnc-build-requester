@@ -15,7 +15,7 @@
   <version>0.7-SNAPSHOT</version>
   <packaging>hpi</packaging>
 
-  <name>Build Requester Plugin</name>
+  <name>Project Newcastle Build Requester Plugin</name>
   <licenses>
     <license>
       <name>MIT License</name>
