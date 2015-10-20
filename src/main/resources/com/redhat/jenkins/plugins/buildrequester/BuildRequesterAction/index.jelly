@@ -68,7 +68,7 @@
                                style="display: none; margin-top: 10px;"/>
                     </f:entry>
                     <f:entry title="Build Script" help="/plugin/build-requester/help/help-buildScript.html">
-                        <f:expandableTextbox name="buildScript" value="${it.buildScript}"/>
+                        <f:textarea name="buildScript" value="${it.buildScript}"/>
                     </f:entry>
 
                     <!-- oauth token -->
