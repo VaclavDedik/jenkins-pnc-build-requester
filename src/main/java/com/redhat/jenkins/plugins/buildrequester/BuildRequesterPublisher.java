@@ -88,9 +88,9 @@ public class BuildRequesterPublisher extends Recorder {
             action.setName(rootPom.getArtifactId());
 
             // Set name
-            String gav = String.format("%s:%s:%s", rootPom.getGroupId(), rootPom.getArtifactId(),
+            String gav = String.format("%s-%s-%s", rootPom.getGroupId(), rootPom.getArtifactId(),
                     rootPom.getVersion());
-            action.setName(gav.replaceAll("[^A-Za-z0-9]", ""));
+            action.setName(gav.replaceAll("[^A-Za-z0-9_.-]", ""));
 
             // Set SCM Url
             action.setScmRepoURL(repo.getUrl());
