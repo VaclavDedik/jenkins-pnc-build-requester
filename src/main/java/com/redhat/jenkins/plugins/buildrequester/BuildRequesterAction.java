@@ -93,7 +93,7 @@ public class BuildRequesterAction implements Action {
             }
 
             // Send the request
-            URL buildRequestUrl = new URL(nclUrl, String.format(BUILD_TRIGGER_ENDPOINT, buildId));
+            URL buildRequestUrl = new URL(nclUrl, String.format(BUILD_TRIGGER_ENDPOINT + "?rebuildAll=true", buildId));
             HttpUtils.Response buildRequestResponse = HttpUtils.post(buildRequestUrl, null, defaultHeaders);
             if (buildRequestResponse.getResponseCode() / 100 != 2) {
                 handleHttpError("Build request error", buildRequestResponse);
